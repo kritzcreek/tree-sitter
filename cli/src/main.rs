@@ -703,7 +703,7 @@ fn run() -> Result<()> {
             // Run the syntax highlighting tests.
             let test_highlight_dir = test_dir.join("highlight");
             if test_highlight_dir.is_dir() {
-                let mut highlighter = Highlighter::new();
+                let mut highlighter = Highlighter::new(None);
                 highlighter.parser = parser;
                 test_highlight::test_highlights(
                     &loader,

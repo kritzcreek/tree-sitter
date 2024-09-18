@@ -11,8 +11,7 @@ pub use c_lib as c;
 use lazy_static::lazy_static;
 use thiserror::Error;
 use tree_sitter::{
-    Language, LossyUtf8, Node, Parser, Point, Query, QueryCaptures, QueryCursor, QueryError,
-    QueryMatch, Range, Tree,
+    WasmStore, Language, LossyUtf8, Node, Parser, Point, Query, QueryCaptures, QueryCursor, QueryError, QueryMatch, Range, Tree
 };
 
 const CANCELLATION_CHECK_INTERVAL: usize = 100;
@@ -128,6 +127,7 @@ pub struct HighlightConfiguration {
 /// is performing highlighting.
 pub struct Highlighter {
     pub parser: Parser,
+    pub store: Option<WasmStore>,
     cursors: Vec<QueryCursor>,
 }
 
@@ -181,15 +181,16 @@ struct HighlightIterLayer<'a> {
 
 impl Default for Highlighter {
     fn default() -> Self {
-        Self::new()
+        Self::new(None)
     }
 }
 
 impl Highlighter {
     #[must_use]
-    pub fn new() -> Self {
+    pub fn new(store: Option<WasmStore>) -> Self {
         Self {
             parser: Parser::new(),
+            store,
             cursors: Vec::new(),
         }
     }
@@ -439,6 +440,12 @@ impl<'a> HighlightIterLayer<'a> {
         let mut queue = Vec::new();
         loop {
             if highlighter.parser.set_included_ranges(&ranges).is_ok() {
+                if let Some(store) = mem::take(&mut highlighter.store) {
+                  highlighter
+                      .parser
+                      .set_wasm_store(store)
+                      .map_err(|_| Error::InvalidLanguage)?;
+                }
                 highlighter
                     .parser
                     .set_language(&config.language)
@@ -449,6 +456,7 @@ impl<'a> HighlightIterLayer<'a> {
                     .parser
                     .parse(source, None)
                     .ok_or(Error::Cancelled)?;
+                highlighter.store = highlighter.parser.take_wasm_store();
                 unsafe { highlighter.parser.set_cancellation_flag(None) };
                 let mut cursor = highlighter.cursors.pop().unwrap_or_default();
 

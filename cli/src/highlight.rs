@@ -347,7 +347,7 @@ pub fn ansi(
     let stdout = io::stdout();
     let mut stdout = stdout.lock();
     let time = Instant::now();
-    let mut highlighter = Highlighter::new();
+    let mut highlighter = Highlighter::new(None);
 
     let events = highlighter.highlight(config, source, cancellation_flag, |string| {
         loader.highlight_config_for_injection_string(string)
@@ -392,7 +392,7 @@ pub fn html(
     let stdout = io::stdout();
     let mut stdout = stdout.lock();
     let time = Instant::now();
-    let mut highlighter = Highlighter::new();
+    let mut highlighter = Highlighter::new(None);
 
     let events = highlighter.highlight(config, source, cancellation_flag, |string| {
         loader.highlight_config_for_injection_string(string)

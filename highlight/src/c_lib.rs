@@ -150,7 +150,7 @@ pub unsafe extern "C" fn ts_highlighter_add_language(
 #[no_mangle]
 pub extern "C" fn ts_highlight_buffer_new() -> *mut TSHighlightBuffer {
     Box::into_raw(Box::new(TSHighlightBuffer {
-        highlighter: Highlighter::new(),
+        highlighter: Highlighter::new(None),
         renderer: HtmlRenderer::new(),
     }))
 }
